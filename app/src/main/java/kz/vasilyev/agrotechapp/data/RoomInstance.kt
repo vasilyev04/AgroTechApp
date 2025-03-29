@@ -5,8 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import kz.vasilyev.agrotechapp.models.Garden
+import kz.vasilyev.agrotechapp.models.Note
 
-@Database(entities = [Garden::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Garden::class, Note::class],
+    version = 1,
+    exportSchema = false
+)
 abstract class RoomInstance : RoomDatabase() {
 
     abstract fun roomDao(): RoomDao

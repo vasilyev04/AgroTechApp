@@ -51,11 +51,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.patrykandpatrick.vico.compose.axis.horizontal.bottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.startAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.entry.entryModelOf
 import kz.vasilyev.agrotechapp.R
 import kz.vasilyev.agrotechapp.data.RoomInstance
 import kz.vasilyev.agrotechapp.models.Garden
 import kz.vasilyev.agrotechapp.ui.theme.BackgroundScreen
 import kz.vasilyev.agrotechapp.ui.theme.Primary
+import kotlin.collections.Map.Entry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
