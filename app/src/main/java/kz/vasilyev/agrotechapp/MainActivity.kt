@@ -134,7 +134,13 @@ class MainActivity : ComponentActivity() {
 
                                     NavigationBarItem(
                                         selected = false,
-                                        onClick = {},
+                                        onClick = { navController.navigate(Screen.BottomBar.Chat.route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        } },
                                         label = null,
                                         icon = {
                                             Column(
@@ -166,7 +172,13 @@ class MainActivity : ComponentActivity() {
 
                                     NavigationBarItem(
                                         selected = false,
-                                        onClick = {},
+                                        onClick = { navController.navigate(Screen.BottomBar.Library.route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        } },
                                         label = null,
                                         icon = {
                                             Column(

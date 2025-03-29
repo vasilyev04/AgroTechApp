@@ -11,7 +11,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kz.vasilyev.agrotechapp.feature.add_garden.AddGardenScreen
+import kz.vasilyev.agrotechapp.feature.ai_chat.ChatScreen
 import kz.vasilyev.agrotechapp.feature.home.HomeScreen
+import kz.vasilyev.agrotechapp.feature.library.LibraryScreen
 import kz.vasilyev.agrotechapp.feature.tips.TipsScreen
 
 @Composable
@@ -29,15 +31,15 @@ fun NavHost(
         }
 
         composable(route = Screen.BottomBar.Library.route) {
-            TipsScreen(innerPadding)
+            LibraryScreen(innerPadding)
         }
 
         composable(route = Screen.BottomBar.Chat.route) {
-
+            ChatScreen(innerPadding)
         }
 
         composable(route = Screen.BottomBar.Tips.route) {
-
+            TipsScreen(innerPadding)
         }
 
         composable(route = Screen.AddGarden.route) {
