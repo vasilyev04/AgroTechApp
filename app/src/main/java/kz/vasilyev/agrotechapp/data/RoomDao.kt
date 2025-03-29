@@ -15,4 +15,7 @@ interface RoomDao {
 
     @Query("SELECT * FROM gardens")
     fun getGardens(): Flow<List<Garden>>
+
+    @Query("SELECT * FROM gardens WHERE id = :id")
+    fun getGarden(id: Long): Garden
 }

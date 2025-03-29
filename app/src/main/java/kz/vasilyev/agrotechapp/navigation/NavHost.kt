@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kz.vasilyev.agrotechapp.feature.add_garden.AddGardenScreen
+import kz.vasilyev.agrotechapp.feature.add_note.AddNoteScreen
 import kz.vasilyev.agrotechapp.feature.ai_chat.ChatScreen
 import kz.vasilyev.agrotechapp.feature.home.HomeScreen
 import kz.vasilyev.agrotechapp.feature.journal_garden.JournalGarden
@@ -45,10 +46,22 @@ fun NavHost(
         }
 
         composable(route = Screen.JournalGarden.route) { backStackEntry ->
-            val gardenId = backStackEntry.arguments?.getLong("gardenId")
-            gardenId?.let {
-                JournalGarden(innerPadding, navController, gardenId)
+            val gardenId = backStackEntry.arguments?.getString("gardenId")
+            gardenId?.toLongOrNull()?.let {
+                JournalGarden(innerPadding, navController, it)
             }
         }
+
+        composable(route = Screen.JournalGarden.route) { backStackEntry ->
+            val gardenId = backStackEntry.arguments?.getString("gardenId")
+            gardenId?.toLongOrNull()?.let {
+                JournalGarden(innerPadding, navController, it)
+            }
+        }
+
+        composable(route = Screen.AddNote.route) { backStackEntry ->
+            AddNoteScreen(innerPadding, navController)
+        }
+
     }
 }

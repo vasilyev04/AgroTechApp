@@ -74,7 +74,10 @@ fun HomeScreen(
                 ) {
                     items(gardens.value.size) { index ->
                         GardenItem(gardens.value[index], position = index + 1) {
-                            navController.navigate(route = Screen.JournalGarden.route)
+                            navController.navigate(route = Screen.JournalGarden.route.replace(
+                                oldValue = "{gardenId}",
+                                newValue = gardens.value[index].id.toString()
+                            ))
                         }
                     }
                 }
