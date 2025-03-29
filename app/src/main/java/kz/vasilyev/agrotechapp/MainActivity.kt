@@ -72,13 +72,21 @@ class MainActivity : ComponentActivity() {
                                                     modifier = Modifier.size(32.dp),
                                                     painter = painterResource(R.drawable.ic_home),
                                                     contentDescription = "Home",
-                                                    tint = Color.White
+                                                    tint = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Home.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = "Главная",
                                                     fontSize = 12.sp,
-                                                    color = Color.White
+                                                    color = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Home.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                             }
                                         }
@@ -104,13 +112,21 @@ class MainActivity : ComponentActivity() {
                                                     modifier = Modifier.size(32.dp),
                                                     painter = painterResource(R.drawable.ic_journal),
                                                     contentDescription = "",
-                                                    tint = Secondary
+                                                    tint = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Tips.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = "Советы",
                                                     fontSize = 12.sp,
-                                                    color = Secondary
+                                                    color = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Tips.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                             }
                                         }
@@ -128,13 +144,21 @@ class MainActivity : ComponentActivity() {
                                                     modifier = Modifier.size(32.dp),
                                                     painter = painterResource(R.drawable.ic_chat),
                                                     contentDescription = "Home",
-                                                    tint = Secondary
+                                                    tint = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Chat.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = "Чат",
                                                     fontSize = 12.sp,
-                                                    color = Secondary
+                                                    color = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Chat.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                             }
                                         }
@@ -152,13 +176,21 @@ class MainActivity : ComponentActivity() {
                                                     modifier = Modifier.size(32.dp),
                                                     painter = painterResource(R.drawable.ic_library),
                                                     contentDescription = "Home",
-                                                    tint = Secondary
+                                                    tint = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Library.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = "Библиоетка",
                                                     fontSize = 12.sp,
-                                                    color = Secondary
+                                                    color = if(currentDestination != null && currentDestination.route == Screen.BottomBar.Library.route) {
+                                                        Color.White
+                                                    } else {
+                                                        Secondary
+                                                    }
                                                 )
                                             }
                                         }

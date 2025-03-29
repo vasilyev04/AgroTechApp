@@ -10,8 +10,9 @@ data class Garden(
     val title: String,
     val substrate: String,
     val plantType: String,
-    val plantDate: Long,
-    val harvestDate: Long,
+    val plantDate: String,
+    val harvestDate: String,
+    val wateringInterval: Int,
     val photo: String
 ) {
     companion object {

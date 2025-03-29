@@ -10,7 +10,9 @@ import androidx.compose.ui.Modifier
 @Composable
 fun TipsScreen(innerPadding: PaddingValues) {
     Column(
-        modifier = Modifier.padding(innerPadding).fillMaxSize()
+        modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()
     ) {
 
     }

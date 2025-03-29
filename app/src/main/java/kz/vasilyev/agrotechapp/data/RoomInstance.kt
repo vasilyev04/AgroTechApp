@@ -26,7 +26,7 @@ abstract class RoomInstance : RoomDatabase() {
                     application,
                     RoomInstance::class.java,
                     DB_NAME
-                ).build()
+                ).allowMainThreadQueries().build()
 
                 INSTANCE = db
                 return db

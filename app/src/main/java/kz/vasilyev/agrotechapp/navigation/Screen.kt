@@ -18,4 +18,6 @@ sealed class Screen(val route: String) {
             fun isBottomBarScreen(route: String?): Boolean = route in bottomBarRoutes
         }
     }
+
+    data object AddGarden : Screen("/addgarden")
 }
