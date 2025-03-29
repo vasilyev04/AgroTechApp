@@ -1,5 +1,6 @@
 package kz.vasilyev.agrotechapp.feature.home
 
+import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,12 +18,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import kz.vasilyev.agrotechapp.models.Garden
+import kz.vasilyev.agrotechapp.data.RoomInstance
 import kz.vasilyev.agrotechapp.navigation.Screen
 import kz.vasilyev.agrotechapp.ui.theme.Primary
 
@@ -31,6 +35,16 @@ fun HomeScreen(
     innerPadding: PaddingValues,
     navController: NavController
 ) {
+    val context = LocalContext.current
+    val gardensFlow = remember {
+        RoomInstance
+            .getInstance(context.applicationContext as Application)
+            .roomDao()
+            .getGardens()
+    }
+
+    val gardens = gardensFlow.collectAsState(initial = emptyList())
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,19 +72,10 @@ fun HomeScreen(
                         .padding(top = 30.dp, start = 24.dp, end = 24.dp, bottom = 80.dp),
                     columns = GridCells.Fixed(2)
                 ) {
-                    items(2) {
-                        GardenItem(
-                            garden = Garden(
-                                title = "Название лота",
-                                substrate = "Cубстрат",
-                                plantType = "Sunflower",
-                                harvestDate = "",
-                                photo = "",
-                                plantDate = "",
-                                wateringInterval = 12
-                            ),
-                            position = it + 1
-                        )
+                    items(gardens.value.size) { index ->
+                        GardenItem(gardens.value[index], position = index + 1) {
+                            navController.navigate(route = Screen.JournalGarden.route)
+                        }
                     }
                 }
 

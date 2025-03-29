@@ -1,7 +1,9 @@
 package kz.vasilyev.agrotechapp.feature.add_garden
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -32,7 +34,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,7 +93,6 @@ fun AddGardenScreen(
     )
 
     var wateringIntervalText by remember { mutableStateOf("") }
-    var wateringIntervalInt by remember { mutableStateOf(0) }
 
     Scaffold(
         containerColor = BackgroundScreen,
@@ -268,7 +268,7 @@ fun AddGardenScreen(
                             harvestDate = fieldStates[3].value,
                             plantDate = fieldStates[4].value,
                             wateringInterval = wateringIntervalText.toIntOrNull() ?: 0,
-                            photo = selectedImageUri.value.toString()
+                            photo = uriToBase64(context, selectedImageUri.value as Uri) ?: ""
                         )
 
                         RoomInstance
@@ -297,3 +297,21 @@ fun AddGardenScreen(
         }
     }
 }
+
+fun uriToBase64(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bytes = inputStream?.readBytes()
+        inputStream?.close()
+
+        if (bytes != null) {
+            Base64.encodeToString(bytes, Base64.DEFAULT)
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
