@@ -35,7 +35,19 @@ import java.io.ByteArrayOutputStream
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.window.Dialog
 import java.util.*
+import kotlinx.coroutines.launch
+import kz.vasilyev.agrotechapp.components.LoadingDots
+import kz.vasilyev.agrotechapp.feature.ai_chat.api.RetrofitClient
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import kotlin.math.roundToInt
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +63,11 @@ fun AddNoteScreen(
     var humidity by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var showHealthDialog by remember { mutableStateOf(false) }
+    var healthyPercent by remember { mutableStateOf(0) }
+    var analyzedImageBase64 by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     // Состояния для отображения ошибок
@@ -64,8 +81,35 @@ fun AddNoteScreen(
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri -> 
-            selectedImageUri = uri
-            photoError = false
+            uri?.let {
+                selectedImageUri = uri
+                photoError = false
+                
+                scope.launch {
+                    isLoading = true
+                    try {
+                        val file = createTempFileFromUri(context, uri)
+                        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                        val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+                        
+                        val response = RetrofitClient.microgreensApi.analyzeImage(body)
+                        if (response.isSuccessful) {
+                            response.body()?.let { analysisResponse ->
+                                healthyPercent = (analysisResponse.healthy * 100).roundToInt()
+                                analyzedImageBase64 = analysisResponse.image_base64
+                                
+                                if (healthyPercent <= 50) {
+                                    showHealthDialog = true
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Обработка ошибки
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            }
         }
     )
 
@@ -171,32 +215,62 @@ fun AddNoteScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    selectedImageUri?.let { uri ->
-                        val bitmap = BitmapFactory.decodeStream(
-                            context.contentResolver.openInputStream(uri)
-                        )
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } ?: Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Добавить фото",
-                            color = if (photoError) Color.Red else Color(0xFF88C057),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        if (photoError) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                    if (isLoading) {
+                        LoadingDots()
+                    } else {
+                        selectedImageUri?.let { uri ->
+                            Column {
+                                context.contentResolver.openInputStream(uri)?.use { stream ->
+                                    val bitmap = BitmapFactory.decodeStream(stream)
+                                    if (bitmap != null) {
+                                        Image(
+                                            bitmap = bitmap.asImageBitmap(),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .weight(1f),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        if (healthyPercent > 0) {
+                                            Text(
+                                                text = "Здоровье растения: $healthyPercent%",
+                                                color = if (healthyPercent > 50) Color(0xFF88C057) else Color.Red,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(Color.White)
+                                                    .padding(8.dp),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    } else {
+                                        Text(
+                                            text = "Ошибка загрузки изображения",
+                                            color = Color.Red,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        } ?: Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
-                                text = "Обязательное поле",
-                                color = Color.Red,
-                                fontSize = 14.sp
+                                text = "Добавить фото",
+                                color = if (photoError) Color.Red else Color(0xFF88C057),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
                             )
+                            if (photoError) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Обязательное поле",
+                                    color = Color.Red,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -400,6 +474,88 @@ fun AddNoteScreen(
                 )
             }
         }
+
+        if (showHealthDialog) {
+            Dialog(onDismissRequest = { showHealthDialog = false }) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Text(
+                            text = "Внимание!",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = """
+                                Обнаружены проблемы со здоровьем растения!
+                                
+                                Процент здоровых участков: $healthyPercent%
+                                
+                                На изображении отмечены проблемные зоны синим цветом.
+                                Рекомендуется проверить условия выращивания и при необходимости обратиться к специалисту.
+                            """.trimIndent(),
+                            fontSize = 16.sp,
+                            color = Color.Black
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        analyzedImageBase64?.let { base64 ->
+                            // Удаляем префикс data:image/jpeg;base64, если он есть
+                            val cleanBase64 = base64.substringAfter("base64,")
+                            val imageBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            } else {
+                                Text(
+                                    text = "Ошибка отображения результата анализа",
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = { showHealthDialog = false },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF88C057)
+                            )
+                        ) {
+                            Text("Понятно")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -462,4 +618,16 @@ fun uriToBase64(context: Context, uri: Uri): String? {
         e.printStackTrace()
         null
     }
+}
+
+private fun createTempFileFromUri(context: Context, uri: Uri): File {
+    val file = File.createTempFile("image", ".jpg", context.cacheDir)
+    
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        FileOutputStream(file).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+    } ?: throw IllegalStateException("Не удалось открыть изображение")
+    
+    return file
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kz.vasilyev.agrotechapp.components.LoadingDots
 import kz.vasilyev.agrotechapp.feature.ai_chat.api.RetrofitClient
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -237,6 +238,33 @@ fun ChatScreen(innerPadding: PaddingValues) {
                         message = message.text,
                         imageBase64 = message.imageBase64
                     )
+                }
+            }
+            
+            if (isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .widthIn(max = 340.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            )
+                        ) {
+                            LoadingDots(
+                                modifier = Modifier.padding(
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
