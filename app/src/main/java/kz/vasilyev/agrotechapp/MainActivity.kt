@@ -41,7 +41,9 @@ class MainActivity : ComponentActivity() {
             val navBackStackEntry = navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry.value?.destination
 
-            AgroTechAppTheme {
+            AgroTechAppTheme(
+                darkTheme = false
+            ) {
                 Scaffold(
                     containerColor = BackgroundScreen,
                     modifier = Modifier.fillMaxSize(),

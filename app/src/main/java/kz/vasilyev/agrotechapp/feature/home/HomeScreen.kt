@@ -87,7 +87,7 @@ fun HomeScreen(
                         .padding(top = 30.dp, bottom = 80.dp),
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(25.dp)
                 ) {
                     items(filteredGardens.size) { index ->
                         GardenItem(filteredGardens[index], position = index + 1) {
