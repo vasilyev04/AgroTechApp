@@ -609,7 +609,7 @@ fun SubstratesTab() {
                 "5.5-6.8",
                 "Высокая",
                 "Хорошая",
-                defaultPhotoResId = R.drawable.redis,
+                defaultPhotoResId = R.drawable.kokos,
             ),
             SubstrateType(
                 "Торф",
@@ -617,7 +617,7 @@ fun SubstratesTab() {
                 "3.5-4.5",
                 "Высокая",
                 "Средняя",
-                defaultPhotoResId = R.drawable.redis
+                defaultPhotoResId = R.drawable.torf
             ),
             SubstrateType(
                 "Перлит",
@@ -625,7 +625,7 @@ fun SubstratesTab() {
                 "7.0-7.5",
                 "Низкая",
                 "Отличная",
-                defaultPhotoResId = R.drawable.redis
+                defaultPhotoResId = R.drawable.perlit
             ),
             SubstrateType(
                 "Вермикулит",
@@ -633,7 +633,7 @@ fun SubstratesTab() {
                 "6.0-7.2",
                 "Высокая",
                 "Хорошая",
-                defaultPhotoResId = R.drawable.redis
+                defaultPhotoResId = R.drawable.vermiculit
             )
         )
     }
