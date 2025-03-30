@@ -30,9 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kz.vasilyev.agrotechapp.components.HarvestCalendar
 import kz.vasilyev.agrotechapp.data.RoomInstance
 import kz.vasilyev.agrotechapp.navigation.Screen
 import kz.vasilyev.agrotechapp.ui.theme.Primary
+import java.time.LocalDate
 
 @Composable
 fun HomeScreen(
@@ -55,6 +57,13 @@ fun HomeScreen(
         garden.plantType.contains(searchQuery, ignoreCase = true)
     }
 
+    // Получаем все даты сбора урожая
+    val harvestDates = remember(gardens.value) {
+        gardens.value.map { garden ->
+            LocalDate.ofEpochDay(garden.harvestDate / (24 * 60 * 60 * 1000))
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,10 +78,16 @@ fun HomeScreen(
 
         Spacer(Modifier.height(10.dp))
 
+        HarvestCalendar(
+            harvestDates = harvestDates
+        )
+
+        Spacer(Modifier.height(10.dp))
+
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 21.dp, top = 14.dp),
+                .padding(bottom = 21.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White,
