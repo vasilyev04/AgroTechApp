@@ -1,5 +1,7 @@
 package kz.vasilyev.agrotechapp.feature.tips
 
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.FrameLayout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,19 +16,62 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+
 
 data class TipItem(
     val question: String,
     val answer: String
 )
 
+data class VideoTipItem(
+    val title: String,
+    val description: String,
+    val videoUrl: String
+)
+
+@Composable
+fun VideoPlayer(videoUrl: String) {
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(videoUrl))
+            prepare()
+        }
+    }
+
+    DisposableEffect(
+        AndroidView(
+            factory = {
+                PlayerView(context).apply {
+                    player = exoPlayer
+                    layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                    useController = true
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+        )
+    ) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+}
+
 @Composable
 fun TipsScreen(innerPadding: PaddingValues) {
     var expandedItem by remember { mutableStateOf<Int?>(null) }
+    var expandedVideoItem by remember { mutableStateOf<Int?>(null) }
 
     val tips = remember {
         listOf(
@@ -49,6 +94,26 @@ fun TipsScreen(innerPadding: PaddingValues) {
             TipItem(
                 "Когда собирать урожай?",
                 "Микрозелень готова к сбору, когда у растений появляются первые настоящие листочки (обычно через 7-14 дней после посева). Срезайте растения ножницами чуть выше уровня субстрата. Употребляйте в пищу сразу после сбора."
+            )
+        )
+    }
+
+    val videoTips = remember {
+        listOf(
+            VideoTipItem(
+                "Как выращивать микрозелень дома",
+                "Подробное руководство по выращиванию микрозелени в домашних условиях",
+                "https://youtu.be/T428QUIb_Aw"
+            ),
+            VideoTipItem(
+                "Советы по уходу за микрозеленью",
+                "Полезные советы по уходу и поливу микрозелени",
+                "https://www.youtube.com/watch?v=foVIKSd_r1w"
+            ),
+            VideoTipItem(
+                "Сбор и хранение микрозелени",
+                "Как правильно собирать и хранить микрозелень",
+                "https://www.youtube.com/watch?v=G_bSyH94hbU"
             )
         )
     }
@@ -89,6 +154,63 @@ fun TipsScreen(innerPadding: PaddingValues) {
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+
+        item {
+            Text(
+                text = "Видео советы",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        items(videoTips.indices.toList()) { index ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedVideoItem = if (expandedVideoItem == index) null else index },
+                shape = RoundedCornerShape(15.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = videoTips[index].title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = if (expandedVideoItem == index) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (expandedVideoItem == index) "Свернуть" else "Развернуть"
+                        )
+                    }
+
+                    AnimatedVisibility(visible = expandedVideoItem == index) {
+                        Column {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = videoTips[index].description,
+                                fontSize = 14.sp,
+                                color = Color(0xFF5F5F5F)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            VideoPlayer(videoUrl = videoTips[index].videoUrl)
+                        }
+                    }
                 }
             }
         }
