@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,11 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kz.vasilyev.agrotechapp.navigation.Screen
 import kotlinx.coroutines.launch
 import kz.vasilyev.agrotechapp.feature.ai_chat.api.RetrofitClient
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -108,7 +107,6 @@ fun ChatScreen(innerPadding: PaddingValues) {
         }
     )
 
-    // Добавляем приветственное сообщение при первом входе
     LaunchedEffect(Unit) {
         if (messages.isEmpty()) {
             messages = listOf(Message(
@@ -150,7 +148,8 @@ fun ChatScreen(innerPadding: PaddingValues) {
                     onClick = { photoPicker.launch("image/*") }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Notifications,
+                        modifier = Modifier.size(30.dp),
+                        painter = painterResource(kz.vasilyev.agrotechapp.R.drawable.ic_camera),
                         contentDescription = "Открыть галерею",
                         tint = Color(0xFFA9D66A)
                     )

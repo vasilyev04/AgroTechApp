@@ -25,19 +25,17 @@ class WateringNotificationService(
     }
 
     private fun createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                WATERING_CHANNEL_ID,
-                WATERING_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Канал для уведомлений о поливе растений"
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500)
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            WATERING_CHANNEL_ID,
+            WATERING_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Канал для уведомлений о поливе растений"
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 200, 500)
+            setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
         }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun showNotification(gardenId: Long, gardenTitle: String) {
@@ -54,7 +52,7 @@ class WateringNotificationService(
         )
 
         val notification = NotificationCompat.Builder(context, WATERING_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_date)
+            .setSmallIcon(R.drawable.ic_watering)
             .setContentTitle("Время полива!")
             .setContentText("Пора полить ваш сад: $gardenTitle")
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -67,7 +65,6 @@ class WateringNotificationService(
 
         notificationManager.notify(gardenId.toInt(), notification)
 
-        // Перепланируем следующее уведомление
         val garden = kz.vasilyev.agrotechapp.data.RoomInstance
             .getInstance(context.applicationContext as android.app.Application)
             .roomDao()

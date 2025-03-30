@@ -85,7 +85,6 @@ fun AddGardenScreen(
     var showPermissionRequest by remember { mutableStateOf(false) }
     var pendingGarden by remember { mutableStateOf<Garden?>(null) }
 
-    // Состояния для ошибок
     var titleError by remember { mutableStateOf(false) }
     var plantTypeError by remember { mutableStateOf(false) }
     var substrateError by remember { mutableStateOf(false) }
@@ -115,6 +114,7 @@ fun AddGardenScreen(
     // Если нужно показать запрос разрешения
     if (showPermissionRequest) {
         RequestNotificationPermission {
+            showPermissionRequest = false
             pendingGarden?.let { garden ->
                 val gardenId = RoomInstance
                     .getInstance(context.applicationContext as Application)
@@ -127,8 +127,10 @@ fun AddGardenScreen(
                     gardenTitle = garden.title,
                     wateringTimeMillis = garden.wateringTime
                 )
+                
+                pendingGarden = null
+                navController.popBackStack()
             }
-            navController.popBackStack()
         }
     }
 
