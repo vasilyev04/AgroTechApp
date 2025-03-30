@@ -16,24 +16,19 @@ import androidx.compose.ui.tooling.preview.Preview
 
 
 @Composable
-@Preview
-fun PreviewSendMessage(){
-    SendMessageItem("Test")
-}
-
-@Composable
 fun SendMessageItem(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 60.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-        horizontalAlignment = Alignment.End
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.End
     ) {
         Box(
             modifier = Modifier
+                .widthIn(min = 0.dp, max = 280.dp)
                 .clip(RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp))
                 .background(Color(0xFFA9D66A))
                 .padding(12.dp)
@@ -41,9 +36,9 @@ fun SendMessageItem(
             Text(
                 text = message,
                 color = Color.White,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Start
+                fontSize = 16.sp
             )
         }
     }
 }
+

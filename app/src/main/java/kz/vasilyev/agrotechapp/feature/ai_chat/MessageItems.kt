@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -21,11 +22,11 @@ fun SendMessageItem(message: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        contentAlignment = Alignment.CenterEnd
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFFA9D66A))
                 .padding(12.dp)
@@ -38,6 +39,7 @@ fun SendMessageItem(message: String) {
         }
     }
 }
+
 
 @Composable
 fun ReceiveMessageItem(message: String, imageBase64: String? = null) {

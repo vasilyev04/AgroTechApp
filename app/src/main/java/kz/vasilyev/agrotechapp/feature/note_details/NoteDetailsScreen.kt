@@ -112,11 +112,11 @@ fun NoteDetailsScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    MetricItem("Высота", note.height)
-                    MetricItem("Освещение", note.light)
-                    MetricItem("Температура воды", note.waterTemp)
-                    MetricItem("Температура воздуха", note.airTemp)
-                    MetricItem("Влажность", note.humidity)
+                    MetricItem("Высота", note.height.toFloat())
+                    MetricItem("Освещение", note.light.toFloat())
+                    MetricItem("Температура воды", note.waterTemp.toFloat())
+                    MetricItem("Температура воздуха", note.airTemp.toFloat())
+                    MetricItem("Влажность", note.humidity.toFloat())
                 }
             }
 
@@ -157,7 +157,7 @@ fun NoteDetailsScreen(
 }
 
 @Composable
-private fun MetricItem(label: String, value: String) {
+private fun MetricItem(label: String, value: Float) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,7 +170,13 @@ private fun MetricItem(label: String, value: String) {
             color = Color.Gray
         )
         Text(
-            text = value,
+            text = when(label) {
+                "Высота" -> "%.1f мм".format(value)
+                "Освещение" -> "%.1f lux".format(value)
+                "Температура воды", "Температура воздуха" -> "%.1f°C".format(value)
+                "Влажность" -> "%.1f%%".format(value)
+                else -> "%.1f".format(value)
+            },
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF88C057)

@@ -1,6 +1,8 @@
 package kz.vasilyev.agrotechapp.feature.add_garden
 
 import android.app.Application
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
@@ -61,7 +63,16 @@ import kz.vasilyev.agrotechapp.data.RoomInstance
 import kz.vasilyev.agrotechapp.models.Garden
 import kz.vasilyev.agrotechapp.ui.theme.BackgroundScreen
 import kz.vasilyev.agrotechapp.ui.theme.Primary
+import kz.vasilyev.agrotechapp.utils.AlarmScheduler
+import kz.vasilyev.agrotechapp.utils.PermissionUtils
+import kz.vasilyev.agrotechapp.utils.RequestNotificationPermission
 import kotlin.collections.Map.Entry
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,8 +81,18 @@ fun AddGardenScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
-
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
+    var showPermissionRequest by remember { mutableStateOf(false) }
+    var pendingGarden by remember { mutableStateOf<Garden?>(null) }
+
+    // Состояния для ошибок
+    var titleError by remember { mutableStateOf(false) }
+    var plantTypeError by remember { mutableStateOf(false) }
+    var substrateError by remember { mutableStateOf(false) }
+    var plantDateError by remember { mutableStateOf(false) }
+    var harvestDateError by remember { mutableStateOf(false) }
+    var wateringTimeError by remember { mutableStateOf(false) }
+    var photoError by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -80,25 +101,36 @@ fun AddGardenScreen(
         }
     )
 
-    val fieldStates = remember {
-        mutableStateListOf(
-            mutableStateOf(""), // Название лота
-            mutableStateOf(""), // Вид
-            mutableStateOf(""), // Субстрат
-            mutableStateOf(""), // Дата посева
-            mutableStateOf("")  // Дата сбора
-        )
+    var title by remember { mutableStateOf("") }
+    var plantType by remember { mutableStateOf("") }
+    var substrate by remember { mutableStateOf("") }
+    
+    var plantDate by remember { mutableStateOf<Long?>(null) }
+    var harvestDate by remember { mutableStateOf<Long?>(null) }
+    var wateringTime by remember { mutableStateOf<Long?>(null) }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    // Если нужно показать запрос разрешения
+    if (showPermissionRequest) {
+        RequestNotificationPermission {
+            pendingGarden?.let { garden ->
+                val gardenId = RoomInstance
+                    .getInstance(context.applicationContext as Application)
+                    .roomDao()
+                    .addGarden(garden)
+
+                AlarmScheduler.scheduleWateringAlarm(
+                    context = context,
+                    gardenId = gardenId,
+                    gardenTitle = garden.title,
+                    wateringTimeMillis = garden.wateringTime
+                )
+            }
+            navController.popBackStack()
+        }
     }
-
-    val placeholderFields = listOf(
-        Pair("Название лота", R.drawable.ic_title),
-        Pair("Вид", R.drawable.ic_home),
-        Pair("Субстрат", R.drawable.ic_substrate),
-        Pair("Дата посева", R.drawable.ic_date),
-        Pair("Дата сбора", R.drawable.ic_harvest_date)
-    )
-
-    var wateringIntervalText by remember { mutableStateOf("") }
 
     Scaffold(
         containerColor = BackgroundScreen,
@@ -142,70 +174,217 @@ fun AddGardenScreen(
             ) {
                 Spacer(Modifier.height(38.dp))
 
-                placeholderFields.forEachIndexed { index, (placeholder, iconRes) ->
-                    TextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = fieldStates[index].value,
-                        onValueChange = { fieldStates[index].value = it },
-                        colors = TextFieldDefaults.textFieldColors(
-                            unfocusedIndicatorColor = Primary,
-                            focusedIndicatorColor = Primary,
-                            disabledIndicatorColor = Primary,
-                            containerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            cursorColor = Primary,
-                        ),
-                        placeholder = { Text(text = placeholder) },
-                        leadingIcon = {
-                            Icon(painterResource(iconRes), contentDescription = "", tint = Primary)
-                        }
-                    )
-                    if(index != fieldStates.size - 1)  Spacer(Modifier.height(11.dp))
-                }
-
-                Spacer(Modifier.height(11.dp))
-
+                // Основные поля
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = wateringIntervalText,
-                    onValueChange = { wateringIntervalText = it },
+                    value = title,
+                    onValueChange = { 
+                        title = it
+                        titleError = false 
+                    },
                     colors = TextFieldDefaults.textFieldColors(
-                        unfocusedIndicatorColor = Primary,
-                        focusedIndicatorColor = Primary,
-                        disabledIndicatorColor = Primary,
+                        unfocusedIndicatorColor = if (titleError) Color.Red else Primary,
+                        focusedIndicatorColor = if (titleError) Color.Red else Primary,
                         containerColor = Color.White,
                         focusedTextColor = Color.Black,
                         cursorColor = Primary,
                     ),
-                    placeholder = { Text(text = "Интервал полива") },
+                    placeholder = { Text("Название лота") },
                     leadingIcon = {
-                        Icon(
-                            painterResource(R.drawable.ic_clocks),
-                            contentDescription = "",
-                            tint = Primary
-                        )
+                        Icon(painterResource(R.drawable.ic_title), contentDescription = "", 
+                            tint = if (titleError) Color.Red else Primary)
                     },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    )
+                    supportingText = if (titleError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
                 )
 
                 Spacer(Modifier.height(11.dp))
 
                 TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    value = "",
-                    onValueChange = { },
-                    placeholder = { Text("Комментарий...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    value = plantType,
+                    onValueChange = { 
+                        plantType = it
+                        plantTypeError = false 
+                    },
                     colors = TextFieldDefaults.textFieldColors(
+                        unfocusedIndicatorColor = if (plantTypeError) Color.Red else Primary,
+                        focusedIndicatorColor = if (plantTypeError) Color.Red else Primary,
                         containerColor = Color.White,
                         focusedTextColor = Color.Black,
-                        unfocusedIndicatorColor = Primary,
-                        focusedIndicatorColor = Primary,
-                        cursorColor = Primary
-                    )
+                        cursorColor = Primary,
+                    ),
+                    placeholder = { Text("Вид") },
+                    leadingIcon = {
+                        Icon(painterResource(R.drawable.ic_home), contentDescription = "", 
+                            tint = if (plantTypeError) Color.Red else Primary)
+                    },
+                    supportingText = if (plantTypeError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
+                )
+
+                Spacer(Modifier.height(11.dp))
+
+                TextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = substrate,
+                    onValueChange = { 
+                        substrate = it
+                        substrateError = false 
+                    },
+                    colors = TextFieldDefaults.textFieldColors(
+                        unfocusedIndicatorColor = if (substrateError) Color.Red else Primary,
+                        focusedIndicatorColor = if (substrateError) Color.Red else Primary,
+                        containerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        cursorColor = Primary,
+                    ),
+                    placeholder = { Text("Субстрат") },
+                    leadingIcon = {
+                        Icon(painterResource(R.drawable.ic_substrate), contentDescription = "", 
+                            tint = if (substrateError) Color.Red else Primary)
+                    },
+                    supportingText = if (substrateError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
+                )
+
+                Spacer(Modifier.height(11.dp))
+
+                // Дата посева
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val calendar = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, day ->
+                                    calendar.set(year, month, day)
+                                    plantDate = calendar.timeInMillis
+                                    plantDateError = false
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                    value = plantDate?.let { 
+                        val date = Date(it)
+                        val localDate = date.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        localDate.format(dateFormatter)
+                    } ?: "",
+                    onValueChange = { },
+                    enabled = false,
+                    colors = TextFieldDefaults.textFieldColors(
+                        unfocusedIndicatorColor = if (plantDateError) Color.Red else Primary,
+                        focusedIndicatorColor = if (plantDateError) Color.Red else Primary,
+                        containerColor = Color.White,
+                        disabledTextColor = Color.Black,
+                    ),
+                    placeholder = { Text("Дата посева") },
+                    leadingIcon = {
+                        Icon(painterResource(R.drawable.ic_date), contentDescription = "", 
+                            tint = if (plantDateError) Color.Red else Primary)
+                    },
+                    supportingText = if (plantDateError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
+                )
+
+                Spacer(Modifier.height(11.dp))
+
+                // Дата сбора
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val calendar = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, day ->
+                                    calendar.set(year, month, day)
+                                    harvestDate = calendar.timeInMillis
+                                    harvestDateError = false
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                    value = harvestDate?.let { 
+                        val date = Date(it)
+                        val localDate = date.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        localDate.format(dateFormatter)
+                    } ?: "",
+                    onValueChange = { },
+                    enabled = false,
+                    colors = TextFieldDefaults.textFieldColors(
+                        unfocusedIndicatorColor = if (harvestDateError) Color.Red else Primary,
+                        focusedIndicatorColor = if (harvestDateError) Color.Red else Primary,
+                        containerColor = Color.White,
+                        disabledTextColor = Color.Black,
+                    ),
+                    placeholder = { Text("Дата сбора") },
+                    leadingIcon = {
+                        Icon(painterResource(R.drawable.ic_harvest_date), contentDescription = "", 
+                            tint = if (harvestDateError) Color.Red else Primary)
+                    },
+                    supportingText = if (harvestDateError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
+                )
+
+                Spacer(Modifier.height(11.dp))
+
+                // Время полива
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val calendar = Calendar.getInstance()
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                    calendar.set(Calendar.MINUTE, minute)
+                                    wateringTime = calendar.timeInMillis
+                                    wateringTimeError = false
+                                },
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        },
+                    value = wateringTime?.let { 
+                        val date = Date(it)
+                        val localTime = date.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalTime()
+                        localTime.format(timeFormatter)
+                    } ?: "",
+                    onValueChange = { },
+                    enabled = false,
+                    colors = TextFieldDefaults.textFieldColors(
+                        unfocusedIndicatorColor = if (wateringTimeError) Color.Red else Primary,
+                        focusedIndicatorColor = if (wateringTimeError) Color.Red else Primary,
+                        containerColor = Color.White,
+                        disabledTextColor = Color.Black,
+                    ),
+                    placeholder = { Text("Время полива") },
+                    leadingIcon = {
+                        Icon(painterResource(R.drawable.ic_clocks), contentDescription = "", 
+                            tint = if (wateringTimeError) Color.Red else Primary)
+                    },
+                    supportingText = if (wateringTimeError) {
+                        { Text("Обязательное поле", color = Color.Red) }
+                    } else null
                 )
 
                 Spacer(Modifier.height(38.dp))
@@ -225,11 +404,12 @@ fun AddGardenScreen(
                     modifier = Modifier
                         .height(220.dp)
                         .fillMaxWidth()
-                        .clickable() {
+                        .clickable { 
                             photoPicker.launch("image/*")
+                            photoError = false 
                         },
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFEFECEC)
+                        containerColor = if (photoError) Color(0xFFFFE5E5) else Color(0xFFEFECEC)
                     ),
                     shape = RoundedCornerShape(20.dp)
                 ) {
@@ -245,19 +425,29 @@ fun AddGardenScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
                         } else {
-                            Text(
-                                text = "Не выбрано",
-                                textAlign = TextAlign.Center,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Primary
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Не выбрано",
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (photoError) Color.Red else Primary
+                                )
+                                if (photoError) {
+                                    Text(
+                                        text = "Обязательное поле",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 14.sp,
+                                        color = Color.Red
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-
-            Spacer(Modifier.height(10.dp))
 
             Box(
                 modifier = Modifier
@@ -267,22 +457,77 @@ fun AddGardenScreen(
             ) {
                 Button(
                     onClick = {
-                        val garden = Garden(
-                            title = fieldStates[0].value,
-                            plantType = fieldStates[1].value,
-                            substrate = fieldStates[2].value,
-                            harvestDate = fieldStates[3].value,
-                            plantDate = fieldStates[4].value,
-                            wateringInterval = wateringIntervalText.toIntOrNull() ?: 0,
-                            photo = uriToBase64(context, selectedImageUri.value as Uri) ?: ""
-                        )
+                        // Сброс ошибок
+                        titleError = false
+                        plantTypeError = false
+                        substrateError = false
+                        plantDateError = false
+                        harvestDateError = false
+                        wateringTimeError = false
+                        photoError = false
 
-                        RoomInstance
-                            .getInstance(context.applicationContext as Application)
-                            .roomDao()
-                            .addGarden(garden)
+                        // Валидация
+                        var isValid = true
 
-                        navController.popBackStack()
+                        if (title.isBlank()) {
+                            titleError = true
+                            isValid = false
+                        }
+                        if (plantType.isBlank()) {
+                            plantTypeError = true
+                            isValid = false
+                        }
+                        if (substrate.isBlank()) {
+                            substrateError = true
+                            isValid = false
+                        }
+                        if (plantDate == null) {
+                            plantDateError = true
+                            isValid = false
+                        }
+                        if (harvestDate == null) {
+                            harvestDateError = true
+                            isValid = false
+                        }
+                        if (wateringTime == null) {
+                            wateringTimeError = true
+                            isValid = false
+                        }
+                        if (selectedImageUri.value == null) {
+                            photoError = true
+                            isValid = false
+                        }
+
+                        if (isValid) {
+                            val garden = Garden(
+                                title = title,
+                                plantType = plantType,
+                                substrate = substrate,
+                                plantDate = plantDate!!,
+                                harvestDate = harvestDate!!,
+                                wateringTime = wateringTime!!,
+                                photo = uriToBase64(context, selectedImageUri.value as Uri) ?: ""
+                            )
+
+                            if (PermissionUtils.hasNotificationPermission(context)) {
+                                val gardenId = RoomInstance
+                                    .getInstance(context.applicationContext as Application)
+                                    .roomDao()
+                                    .addGarden(garden)
+
+                                AlarmScheduler.scheduleWateringAlarm(
+                                    context = context,
+                                    gardenId = gardenId,
+                                    gardenTitle = title,
+                                    wateringTimeMillis = wateringTime!!
+                                )
+
+                                navController.popBackStack()
+                            } else {
+                                pendingGarden = garden
+                                showPermissionRequest = true
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
