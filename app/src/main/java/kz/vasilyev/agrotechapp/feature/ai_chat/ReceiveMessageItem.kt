@@ -16,13 +16,6 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable
-@Preview
-fun PreviewReceiveMessage(){
-    ReceiveMessageItem("Test")
-}
-
-
-@Composable
 fun ReceiveMessageItem(
     message: String,
     modifier: Modifier = Modifier

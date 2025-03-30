@@ -1,160 +1,185 @@
 package kz.vasilyev.agrotechapp.feature.note_details
 
+import android.app.Application
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import kz.vasilyev.agrotechapp.data.RoomInstance
+import kz.vasilyev.agrotechapp.ui.theme.BackgroundScreen
 
-data class NoteItem(
-    val date: String,
-    val height: String,
-    val lighting: String,
-    val temperature: String,
-    val humidity: String,
-    val photoUri: String? = null
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailsScreen(
     innerPadding: PaddingValues,
-    note: NoteItem = NoteItem(
-        date = "29.03.2025",
-        height = "314мм",
-        lighting = "22lux",
-        temperature = "24,3°C",
-        humidity = "12%"
-    )
+    navController: NavController,
+    noteId: Long
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // Date
-        Text(
-            text = note.date,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
-        )
+    val context = LocalContext.current
+    val note = remember {
+        RoomInstance
+            .getInstance(context.applicationContext as Application)
+            .roomDao()
+            .getNote(noteId)
+    }
 
-        // Metrics
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            MetricItem(
-                label = "Высота",
-                value = note.height,
-                color = Color(0xFF4CAF50)
-            )
+    Scaffold(
+        containerColor = BackgroundScreen,
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(innerPadding)
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад"
+                    )
+                }
 
-            MetricItem(
-                label = "Освещение",
-                value = note.lighting,
-                color = Color(0xFFFFC107)
-            )
-
-            MetricItem(
-                label = "Температура",
-                value = note.temperature,
-                color = Color(0xFFE91E63)
-            )
-
-            MetricItem(
-                label = "Влажность",
-                value = note.humidity,
-                color = Color(0xFF2196F3)
-            )
+                Text(
+                    text = "Детали записи",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Bottom buttons
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
         ) {
-            Button(
-                onClick = { /* TODO: Handle photo */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF2C2C2C)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Фотография")
+            // Фото
+            if (note.photo.isNotEmpty()) {
+                val imageBytes = Base64.decode(note.photo, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(200.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { /* TODO: Handle comparison */ },
+            // Метрики
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFA9D66A)
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Сравнить")
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    MetricItem("Высота", note.height.toFloat())
+                    MetricItem("Освещение", note.light.toFloat())
+                    MetricItem("Температура воды", note.waterTemp.toFloat())
+                    MetricItem("Температура воздуха", note.airTemp.toFloat())
+                    MetricItem("Влажность", note.humidity.toFloat())
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { /* TODO: Handle GIF creation */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFA9D66A)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("GIF")
+            // Комментарий
+            if (note.comment.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Комментарий",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF88C057)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = note.comment,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
             }
         }
     }
 }
 
-
 @Composable
-private fun MetricItem(
-    label: String,
-    value: String,
-    color: Color
-) {
-    Column(
+private fun MetricItem(label: String, value: Float) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            fontSize = 14.sp,
-            color = Color(0xFF757575)
+            fontSize = 16.sp,
+            color = Color.Gray
         )
-
         Text(
-            text = value,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = color,
-            modifier = Modifier.padding(top = 4.dp)
+            text = when(label) {
+                "Высота" -> "%.1f мм".format(value)
+                "Освещение" -> "%.1f lux".format(value)
+                "Температура воды", "Температура воздуха" -> "%.1f°C".format(value)
+                "Влажность" -> "%.1f%%".format(value)
+                else -> "%.1f".format(value)
+            },
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF88C057)
         )
     }
 }

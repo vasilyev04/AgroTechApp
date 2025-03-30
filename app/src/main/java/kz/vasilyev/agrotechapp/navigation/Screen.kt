@@ -21,4 +21,9 @@ sealed class Screen(val route: String) {
 
     data object AddGarden : Screen("/addgarden")
     data object JournalGarden : Screen("/journalgarden/{gardenId}")
+    data object Analytics : Screen("/analytics/{gardenId}")
+    data object AddNote : Screen("/addnote/{gardenId}")
+    data object DetailsNote : Screen("/detailsnote/{noteId}")
+
+    object FullScreenImage : Screen("/fullscreen_image/{imageBase64}")
 }

@@ -43,6 +43,12 @@ import kz.vasilyev.agrotechapp.ui.theme.BackgroundScreen
 import kz.vasilyev.agrotechapp.ui.theme.Primary
 import androidx.core.net.toUri
 import coil.request.ImageRequest
+import java.time.format.DateTimeFormatter
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Date
 
 @Composable
 fun GardenItem(garden: Garden, position: Int, onClick: (Garden) -> Unit) {
@@ -146,7 +152,32 @@ fun GardenItem(garden: Garden, position: Int, onClick: (Garden) -> Unit) {
                 Text(
                     color = Color(0xFF5F5F5F),
                     fontSize = 12.sp,
-                    text = "25.01.2025"
+                    text = Date(garden.harvestDate).toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                        .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                )
+            }
+
+            Spacer(Modifier.height(2.dp))
+
+            Row {
+                Icon(
+                    modifier = Modifier.size(15.dp),
+                    tint = Color(0xFF5F5F5F),
+                    contentDescription = "",
+                    painter = painterResource(R.drawable.ic_clocks),
+                )
+
+                Spacer(Modifier.width(5.dp))
+
+                Text(
+                    color = Color(0xFF5F5F5F),
+                    fontSize = 12.sp,
+                    text = "Полив в ${Date(garden.wateringTime).toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalTime()
+                        .format(DateTimeFormatter.ofPattern("HH:mm"))}"
                 )
             }
         }

@@ -1,77 +1,62 @@
 package kz.vasilyev.agrotechapp.feature.home
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import kz.vasilyev.agrotechapp.ui.theme.Primary
-import kz.vasilyev.agrotechapp.ui.theme.SearchBarColors
+import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MySearchBar(
     textFieldValue: String,
-    onTextFieldValueChange: (String) -> Unit,
-    onSearchBarClickValueChange: () -> Unit,
-){
-
-    val source = remember<MutableInteractionSource> { MutableInteractionSource() }
-    if (source.collectIsPressedAsState().value) onSearchBarClickValueChange()
-
-    val focusManager = LocalFocusManager.current
-
+    onValueChange: (String) -> Unit,
+    onSearch: (String) -> Unit
+) {
     TextField(
-        modifier = Modifier.fillMaxWidth(),
         value = textFieldValue,
+        onValueChange = { 
+            onValueChange(it)
+            onSearch(it)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .background(Color.White, RoundedCornerShape(12.dp)),
         placeholder = {
             Text(
-                text = "Поиск",
-                color = Primary
+                text = "Поиск по названию или виду",
+                fontSize = 14.sp,
+                color = Color.Gray
             )
         },
         leadingIcon = {
             Icon(
-                modifier = Modifier.size(28.dp),
                 imageVector = Icons.Default.Search,
                 contentDescription = "Поиск",
-                tint = Primary
+                tint = Color.Gray
             )
         },
-        trailingIcon = {
-            if (textFieldValue.isNotEmpty()) {
-                IconButton(onClick = {
-                    onTextFieldValueChange("")
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "",
-                        tint = Primary
-                    )
-                }
-            }
-        },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Search
-        ),
-        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-        onValueChange = onTextFieldValueChange,
-        shape = RoundedCornerShape(10.dp),
-        colors = SearchBarColors
+        singleLine = true,
+        textStyle = TextStyle(fontSize = 14.sp),
+        shape = RoundedCornerShape(12.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            containerColor = Color.White,
+            cursorColor = Color(0xFF88C057),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
     )
 }
